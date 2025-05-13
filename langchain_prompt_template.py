@@ -1,7 +1,8 @@
 import openai
 from langchain_openai import AzureChatOpenAI
-from dotenv import load_dotenv
+from langchain.prompts import PromptTemplate
 import os
+from dotenv import load_dotenv
 
 # This function loads environment variables from .env file into the application's environment,
 # allowing for secure management of sensitive data
@@ -18,9 +19,16 @@ number_of_days = 7
 number_of_children = 2
 activity = "beach"
 
-# Defining the prompt message
-prompt = f""" Create a {number_of_days}-day travel itinerary
-for a family with {number_of_children} children who enjoy {activity}. """
+# Defining the prompt message template
+prompt_template = PromptTemplate.from_template(
+    " Create a {days}-day travel itinerary for a family with {children} children who enjoy {activity}. "
+)
+
+prompt = prompt_template.format(
+    days=number_of_days,
+    children=number_of_children,
+    activity=activity
+)
 
 
 # Initializing the language model with LangChain

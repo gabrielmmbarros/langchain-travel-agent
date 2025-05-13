@@ -1,4 +1,4 @@
-openai
-langchain
-langchain-openai
-dotenv
+openai==1.78.0
+langchain==0.3.25
+langchain-openai==0.3.16
+python-dotenv
