@@ -34,7 +34,7 @@ prompt = prompt_template.format(
 # Initializing the language model with LangChain
 # This creates a ChatOpenAI instance with specific parameters for generating responses
 llm = AzureChatOpenAI(
-    azure_deployment = "gpt-4-1-nano",
+    azure_deployment = "gpt-4.1-nano",
     openai_api_version = openai.api_version,
     temperature = 0.5
 )
