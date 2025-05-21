@@ -1,9 +1,9 @@
 import openai
 from langchain_openai import AzureChatOpenAI
 from langchain.prompts import PromptTemplate, ChatPromptTemplate
-from langchain.chains import LLMChain, SimpleSequentialChain
-from langchain_core.pydantic_v1 import Field, BaseModel
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
+from pydantic import BaseModel, Field
+from operator import itemgetter
 import os
 from dotenv import load_dotenv
 
@@ -20,15 +20,15 @@ openai.api_type = os.getenv("AZURE_OPENAI_API_TYPE")
 
 # Define a Pydantic model that will structure the LLM's output
 class Destination(BaseModel):
-    city = Field("city to visit")
-    reason = Field("reason why it is interesting to visit")
+    city: str = Field("city to visit")
+    interest: str = Field("reason why it is interesting to visit")
 
 # Initializing the language model with LangChain
 # This creates a ChatOpenAI instance with specific parameters for generating responses
 llm = AzureChatOpenAI(
     azure_deployment = "gpt-4.1-nano",
     openai_api_version = openai.api_version,
-    temperature = 0.5
+    temperature = 0.2
 )
 
 # Initialize JSON parser with our data model
@@ -51,13 +51,28 @@ cultural_template = ChatPromptTemplate.from_template(
     "Suggest cultural activities and places in {city}"
 )
 
+final_template = ChatPromptTemplate.from_messages(
+    [
+        ("ai", "Travel suggestion for the city: {city}"),
+        ("ai", "Restaurants you can't miss: {restaurants}"),
+        ("ai", "Recommended cultural activities and places: {places}"),
+        ("system", "Combine the previous information into 2 coherent paragraphs")
+    ]
+)
+
 # Creating LCEL chains using the | operator for function composition
 chain_1 = city_template | llm | parser  # Chain to suggest a city based on interest and parse JSON output
 chain_2 = restaurant_template | llm | StrOutputParser()  # Chain to recommend restaurants in the selected city
 chain_3 = cultural_template | llm | StrOutputParser()  # Chain to suggest cultural activities in the selected city
+chain_4 = final_template | llm | StrOutputParser()  # Chain to combine all information into a coherent response
 
 # Combining all chains into a sequential pipeline
-chain = (chain_1 | chain_2 | chain_3)
+chain = (chain_1 | {
+        "city": itemgetter("city"),  # Extract city from the first chain's output
+        "restaurants": chain_2,
+        "places": chain_3,
+        }
+        | chain_4)
 
 # Execute the chain with the user's interest as input
 result = chain.invoke({"interest" : "beach"})
