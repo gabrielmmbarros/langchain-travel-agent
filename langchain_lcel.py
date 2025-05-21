@@ -61,18 +61,18 @@ final_template = ChatPromptTemplate.from_messages(
 )
 
 # Creating LCEL chains using the | operator for function composition
-chain_1 = city_template | llm | parser  # Chain to suggest a city based on interest and parse JSON output
-chain_2 = restaurant_template | llm | StrOutputParser()  # Chain to recommend restaurants in the selected city
-chain_3 = cultural_template | llm | StrOutputParser()  # Chain to suggest cultural activities in the selected city
-chain_4 = final_template | llm | StrOutputParser()  # Chain to combine all information into a coherent response
+step_1 = city_template | llm | parser  # Chain to suggest a city based on interest and parse JSON output
+step_2 = restaurant_template | llm | StrOutputParser()  # Chain to recommend restaurants in the selected city
+step_3 = cultural_template | llm | StrOutputParser()  # Chain to suggest cultural activities in the selected city
+step_4 = final_template | llm | StrOutputParser()  # Chain to combine all information into a coherent response
 
 # Combining all chains into a sequential pipeline
-chain = (chain_1 | {
+chain = (step_1 | {
         "city": itemgetter("city"),  # Extract city from the first chain's output
-        "restaurants": chain_2,
+        "restaurants": step_2,
         "places": chain_3,
         }
-        | chain_4)
+        | step_4)
 
 # Execute the chain with the user's interest as input
 result = chain.invoke({"interest" : "beach"})
