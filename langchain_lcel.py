@@ -70,7 +70,7 @@ step_4 = final_template | llm | StrOutputParser()  # Chain to combine all inform
 chain = (step_1 | {
         "city": itemgetter("city"),  # Extract city from the first chain's output
         "restaurants": step_2,
-        "places": chain_3,
+        "places": step_3,
         }
         | step_4)
 
